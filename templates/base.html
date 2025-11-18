@@ -9,7 +9,6 @@
     
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -34,7 +33,6 @@
                     {{ render_nav_item('settings', '⚙️ Paramètres') }}
                 </ul>
                 
-                <!-- Affichage de la consommation du jour -->
                 <div class="navbar-text">
                     <small class="text-white-50">Aujourd'hui:</small>
                     <strong class="text-white">
@@ -49,22 +47,19 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="container mt-4 flex-grow-1">
-        <!-- Messages Flash gérés par Bootstrap-Flask -->
+
         {{ render_messages() }}
 
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="bg-light mt-auto py-3">
         <div class="container text-center">
             <span class="text-muted"> - WaterTracker</span>
         </div>
     </footer>
 
-    <!-- Bootstrap-Flask gère l'inclusion des JS -->
     {{ bootstrap.load_js() }}
     
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
