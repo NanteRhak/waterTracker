@@ -50,16 +50,6 @@
 
     <main class="container mt-4 flex-grow-1">
         {{ render_messages() }}
-        
-        <!-- ✅ Notification de rappel d'eau -->
-        {% if needs_reminder %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <h4 class="alert-heading">💧 Rappel d'hydratation !</h4>
-            <p class="mb-0">Cela fait plus de 2 heures que vous n'avez pas bu d'eau. Pensez à vous hydrater !</p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
-
         {% block content %}{% endblock %}
     </main>
 
@@ -70,53 +60,6 @@
     </footer>
 
     {{ bootstrap.load_js() }}
-    
-    <!-- ✅ Script pour détecter le timezone de l'utilisateur -->
-    <script>
-    // Détecter et stocker le timezone de l'utilisateur
-    function setUserTimezone() {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const timezoneOffset = new Date().getTimezoneOffset();
-        
-        // Stocker dans un cookie ou localStorage
-        document.cookie = `user_timezone=${timezone}; path=/; max-age=86400`; // 24h
-        document.cookie = `user_timezone_offset=${timezoneOffset}; path=/; max-age=86400`;
-        
-        console.log('🌍 Timezone détecté:', timezone, 'Offset:', timezoneOffset);
-    }
-    
-    // Exécuter au chargement de la page
-    setUserTimezone();
-    </script>
-    
-    <!-- ✅ Script pour les notifications navigateur -->
-    <script>
-    function initWaterReminders() {
-        // Vérifier si les notifications sont supportées
-        if (!("Notification" in window)) {
-            console.log("Ce navigateur ne supporte pas les notifications");
-            return;
-        }
-        
-        // Demander la permission si nécessaire
-        if (Notification.permission === "default") {
-            Notification.requestPermission();
-        }
-        
-        // Vérifier si une notification navigateur est nécessaire
-        {% if needs_reminder and Notification.permission == "granted" %}
-        new Notification("💧 WaterTracker - Rappel", {
-            body: "Cela fait plus de 2 heures que vous n'avez pas bu d'eau. Pensez à vous hydrater ! 💦",
-            icon: "{{ url_for('static', filename='images/favicon.ico') }}",
-            tag: "water-reminder"
-        });
-        {% endif %}
-    }
-    
-    // Démarrer au chargement de la page
-    document.addEventListener('DOMContentLoaded', initWaterReminders);
-    </script>
-    
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
