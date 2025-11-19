@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block title %} WaterTracker - Suivi de consommation d'eau {% endblock %}
+    <title> WaterTracker - Suivi de consommation d'eau </title>
     
     {{ bootstrap.load_css() }}
     
@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- Navigation Bar avec les macros Bootstrap-Flask -->
     {% from 'bootstrap5/nav.html' import render_nav_item %}
     {% from 'bootstrap5/utils.html' import render_messages %}
     
@@ -37,7 +36,7 @@
                     <small class="text-white-50">Aujourd'hui:</small>
                     <strong class="text-white">
                         {% if session.get('current_total') %}
-                            {{ session.current_total }}ml
+                            {{ session.current_total }} mL
                         {% else %}
                             0ml
                         {% endif %}
