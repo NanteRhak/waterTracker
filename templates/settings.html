@@ -1,5 +1,7 @@
 {% extends "base.html" %}
+{% from "bootstrap5/form.html" import render_form %}
 {% block title %} Paramètres {% endblock %}
 {% block content %}
 	<h1>Paramètres</h1>
+	{{ render_form(set_goal)  }}
 {% endblock %}

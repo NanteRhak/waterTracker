@@ -15,11 +15,18 @@ class WaterIntake(FlaskForm):
     unit = SelectField('Type',choices=[('mL','mL'),('verre','verre')])
     submit = SubmitField('Ajouter')
 
+class SetGoal(FlaskForm):
+    goal = DecimalField('Entrer ici votre objéctif', validators=[DataRequired(), NumberRange(min=0.1)])
+    submit = SubmitField('Enregistrer')
+
 def init_session():
     if 'current_total' not in session:
         session['current_total'] = 0
     if 'history' not in session:
         session['history'] = []
+
+    if 'goal' not in session:
+        session['goal'] = 2000
 
 def convert_to_ml(quantity, unit):
     if unit == 'verre':
@@ -56,9 +63,16 @@ def index():
 def history():
     return render_template('history.html')
 
-@app.route('/settings')
+@app.route('/settings',methods=['GET','POST'])
 def settings():
-   return render_template('settings.html')
+    init_session()
+
+    set_goal = SetGoal()
+    if set_goal.validate_on_submit():
+        goal = float(set_goal.goal.data)
+        flash(f'Nouvel objectif défini: {goal} mL', 'success')
+        session.modified = True
+    return render_template('settings.html',set_goal=set_goal,  goal=session.get('goal'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=2527)
