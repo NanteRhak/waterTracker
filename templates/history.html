@@ -2,4 +2,24 @@
 {% block title %} Historiques {% endblock %}
 {% block content %}
 	<h1>Historique</h1>
+	{% if history %}
+	<table>
+	<tr>
+		<th>Quantité</th>
+		<th>Unité</th>
+		<th>Date</th>
+		<th>Heure</tr>
+		<th>Total aprèa</th>
+	</tr>
+	{% for entry in history %}
+	<tr>
+		<td>{{ entry.quantity }}</td>
+		<td>{{ entry.unit  }}</td>
+		<td>{{ entry.date  }}</td>
+		<td>{{ entry.time}}</td>
+		<td>{{ entry.total_after}}</td>
+	</tr>
+	{% endfor %}
+	</table>
+	{% endif %}
 {% endblock %}

@@ -4,6 +4,7 @@ from config import *
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SelectField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
@@ -33,6 +34,11 @@ def convert_to_ml(quantity, unit):
         return quantity * 250
     return quantity
 
+def get_time():
+    current_time = datetime.now().strftime("%H:%M")
+    current_date = datetime.now().strftime("%d-%m-%Y")
+    return current_date, current_time
+
 @app.route('/', methods=['GET','POST'])
 def index():
     init_session()
@@ -46,8 +52,10 @@ def index():
         entry = {
                     'quantity': quantity,
                     'unit': unit,
+                    'date': datetime.now().strftime("%d-%m-%Y"),
+                    'time': datetime.now().strftime("%H:%M"),
                     'quantity_ml': quantity_ml,
-                    'total_after': session['current_total']
+                    'total_after': session['current_total'] + quantity_ml
                 }
 
         session['current_total'] += quantity_ml
@@ -61,7 +69,10 @@ def index():
 
 @app.route('/history')
 def history():
-    return render_template('history.html')
+    init_session()
+
+    history_data = session.get('history', [])
+    return render_template('history.html', history=history_data)
 
 @app.route('/settings',methods=['GET','POST'])
 def settings():
