@@ -4,15 +4,25 @@
 {% block content %}
 
 	<h1>Paramètres</h1>
-	<div class="mb-4">
+	<div class="card">
+		<div class="card-header">
 		<h3>Modifier l'objectif quotidien</h3>
+	</div>
+	<div class="card-body">
 	{{ render_form(set_goal)  }}
-	<p class="mt-2">Votre objectif actuel: {{ goal }} mL</p>
+
+	<p class="mt-2">Votre objectif actuel: <strong>{{ goal }} mL</strong></p>
+	</div>
 	</div>
 	
-	<div class="mb-4">
-		<h3>Réinitialisation</h3>
-		<p>Consomation actuel : <strong>{{ session.current_total }}</strong> </p>
+	<div class="card">
+		<div class="card-header">
+			<h4>Réinitialisation</h3>
+	</div>
+	<div class="card-body">
+		<p>Consomation actuel : <strong>{{ session.current_total }} mL</strong> </p>
 	<p>Cliquer <a href="{{ url_for('reset_progress')}}">ici</a> pour réinitialiser votre consomation aujourd'hui</p>
+	</div>
+	</div>
 	</div>
 {% endblock %}
