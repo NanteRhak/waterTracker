@@ -1,19 +1,22 @@
-from flask import Flask, render_template, redirect, url_for, session, flash, request
+from flask import Flask, render_template, redirect, url_for, session, flash
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SelectField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, date, timedelta
 import pytz
-import math
 import os
 import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
 app.config['BOOTSTRAP_SERVE_LOCAL'] = True
+
+# ✅ Configuration timezone forcé Madagascar
+MADAGASCAR_TIMEZONE = pytz.timezone('Indian/Antananarivo')
 os.environ['TZ'] = 'Indian/Antananarivo'
 time.tzset()
+
 bootstrap = Bootstrap5(app)
 
 class WaterIntake(FlaskForm):
@@ -25,47 +28,22 @@ class SetGoal(FlaskForm):
     goal = DecimalField('Entrer ici votre objectif', validators=[DataRequired(), NumberRange(min=0.1)])
     submit = SubmitField('Enregistrer')
 
-def get_user_timezone():
-    """Récupère le timezone de l'utilisateur depuis les cookies"""
-    user_timezone = request.cookies.get('user_timezone')
-    user_offset = request.cookies.get('user_timezone_offset')
-    
-    if user_timezone:
-        try:
-            return pytz.timezone(user_timezone)
-        except pytz.UnknownTimeZoneError:
-            pass
-    
-    # Fallback: utiliser l'offset si le timezone n'est pas reconnu
-    if user_offset:
-        try:
-            offset_minutes = int(user_offset)
-            offset_hours = -offset_minutes / 60  # Inverser le signe
-            return timezone(timedelta(hours=offset_hours))
-        except (ValueError, TypeError):
-            pass
-    
-    # Fallback final: timezone du serveur
-    return pytz.timezone('Indian/Antananarivo')  # Ajustez selon votre localisation
+def get_madagascar_time():
+    """Retourne la date/heure actuelle à Madagascar"""
+    return datetime.now(MADAGASCAR_TIMEZONE)
 
-def get_user_now():
-    """Retourne la date/heure actuelle dans le timezone de l'utilisateur"""
-    tz = get_user_timezone()
-    return datetime.now(tz)
+def get_madagascar_today():
+    """Retourne la date du jour à Madagascar"""
+    return get_madagascar_time().date()
 
-def get_user_today():
-    """Retourne la date du jour dans le timezone de l'utilisateur"""
-    return get_user_now().date()
-
-def format_user_datetime(dt=None):
-    """Formate une datetime dans le timezone de l'utilisateur"""
+def format_madagascar_datetime(dt=None):
+    """Formate une datetime dans le timezone de Madagascar"""
     if dt is None:
-        dt = get_user_now()
+        dt = get_madagascar_time()
     
     if dt.tzinfo is None:
-        # Si naive, convertir au timezone utilisateur
-        tz = get_user_timezone()
-        dt = tz.localize(dt)
+        # Si naive, convertir au timezone Madagascar
+        dt = MADAGASCAR_TIMEZONE.localize(dt)
     
     return {
         'date': dt.strftime("%d-%m-%Y"),
@@ -81,22 +59,22 @@ def init_session():
     if 'goal' not in session:
         session['goal'] = 2000
     if 'last_reset_date' not in session:
-        user_today = get_user_today().isoformat()
-        session['last_reset_date'] = user_today
+        madagascar_today = get_madagascar_today().isoformat()
+        session['last_reset_date'] = madagascar_today
     if 'last_consumption_time' not in session:
-        session['last_consumption_time'] = get_user_now().isoformat()
+        session['last_consumption_time'] = get_madagascar_time().isoformat()
 
 def check_daily_reset():
-    """Vérifie et réinitialise seulement le total quotidien, pas l'historique"""
-    user_today = get_user_today().isoformat()
+    """Vérifie et réinitialise seulement le total quotidien, pas l'historique (selon heure Madagascar)"""
+    madagascar_today = get_madagascar_today().isoformat()
     
-    if session.get('last_reset_date') != user_today:
-        # ✅ Nouveau jour - réinitialiser seulement le total quotidien
+    if session.get('last_reset_date') != madagascar_today:
+        # ✅ Nouveau jour - réinitialiser seulement le total quotidien (selon Madagascar)
         session['current_total'] = 0
-        session['last_reset_date'] = user_today
-        session['last_consumption_time'] = get_user_now().isoformat()  # Reset du timer
+        session['last_reset_date'] = madagascar_today
+        session['last_consumption_time'] = get_madagascar_time().isoformat()  # Reset du timer
         session.modified = True
-        print(f"✅ Total quotidien réinitialisé pour le {user_today} (timezone utilisateur)")
+        print(f"✅ Total quotidien réinitialisé pour le {madagascar_today} (timezone: Madagascar)")
 
 def convert_to_ml(quantity, unit):
     if unit == 'verre (250 mL)':
@@ -104,19 +82,18 @@ def convert_to_ml(quantity, unit):
     return quantity
 
 def check_water_reminder():
-    """Vérifie si l'utilisateur n'a pas bu d'eau depuis 2 heures (selon son timezone)"""
+    """Vérifie si l'utilisateur n'a pas bu d'eau depuis 2 heures (selon heure Madagascar)"""
     if 'last_consumption_time' not in session:
         return False
     
     try:
-        # Convertir le timestamp stocké en datetime avec timezone
+        # Convertir le timestamp stocké en datetime avec timezone Madagascar
         last_time = datetime.fromisoformat(session['last_consumption_time'])
         if last_time.tzinfo is None:
-            # Si naive, ajouter le timezone utilisateur
-            tz = get_user_timezone()
-            last_time = tz.localize(last_time)
+            # Si naive, ajouter le timezone Madagascar
+            last_time = MADAGASCAR_TIMEZONE.localize(last_time)
         
-        now = get_user_now()
+        now = get_madagascar_time()
         time_diff = now - last_time
         
         # ✅ Vérifier si 2 heures se sont écoulées
@@ -128,16 +105,16 @@ def check_water_reminder():
     return False
 
 def get_weekly_consumption():
-    """Calcule la consommation pour les 7 derniers jours (lundi à dimanche) selon le timezone utilisateur"""
+    """Calcule la consommation pour les 7 derniers jours (lundi à dimanche) selon l'heure Madagascar"""
     weekly_data = {
         'labels': [],  # Jours de la semaine
         'data': [],    # Consommation en mL
         'colors': []   # Couleurs pour le graphique
     }
     
-    # Obtenir le lundi de cette semaine dans le timezone utilisateur
-    user_today = get_user_today()
-    start_of_week = user_today - timedelta(days=user_today.weekday())  # Lundi
+    # Obtenir le lundi de cette semaine selon l'heure Madagascar
+    madagascar_today = get_madagascar_today()
+    start_of_week = madagascar_today - timedelta(days=madagascar_today.weekday())  # Lundi
     
     # Générer les 7 jours de la semaine (lundi à dimanche)
     for i in range(7):
@@ -162,12 +139,12 @@ def get_weekly_consumption():
     return weekly_data
 
 def cleanup_old_history():
-    """Nettoie l'historique pour garder seulement les 30 derniers jours (selon timezone utilisateur)"""
+    """Nettoie l'historique pour garder seulement les 30 derniers jours (selon heure Madagascar)"""
     if 'history' not in session:
         return
     
-    user_today = get_user_today()
-    thirty_days_ago = user_today - timedelta(days=30)
+    madagascar_today = get_madagascar_today()
+    thirty_days_ago = madagascar_today - timedelta(days=30)
     cleaned_history = []
     
     for entry in session['history']:
@@ -197,7 +174,7 @@ def index():
     current_total = session.get('current_total', 0)
     percentage = min((current_total / goal) * 100, 100) if goal > 0 else 0
     
-    # ✅ Vérifier si une notification est nécessaire
+    # ✅ Vérifier si une notification est nécessaire (selon heure Madagascar)
     needs_reminder = check_water_reminder()
     
     # ✅ Obtenir les données hebdomadaires pour l'histogramme
@@ -208,22 +185,22 @@ def index():
         unit = form.unit.data
         quantity_ml = convert_to_ml(quantity, unit)
 
-        # ✅ Utiliser le timezone de l'utilisateur pour l'horodatage
-        user_datetime = format_user_datetime()
+        # ✅ Utiliser l'heure de Madagascar pour l'horodatage
+        madagascar_datetime = format_madagascar_datetime()
         
         entry = {
             'quantity': quantity,
             'unit': unit,
-            'date': user_datetime['date'],
-            'time': user_datetime['time'],
+            'date': madagascar_datetime['date'],
+            'time': madagascar_datetime['time'],
             'quantity_ml': quantity_ml,
             'total_after': session['current_total'] + quantity_ml
         }
 
         session['current_total'] += quantity_ml
         session['history'].append(entry)
-        # ✅ Mettre à jour le timestamp de la dernière consommation avec timezone
-        session['last_consumption_time'] = user_datetime['iso']
+        # ✅ Mettre à jour le timestamp de la dernière consommation avec timezone Madagascar
+        session['last_consumption_time'] = madagascar_datetime['iso']
         session.modified = True
         
         flash(f'{quantity} {unit} ajouté. Total: {session["current_total"]} mL', 'success')
@@ -278,8 +255,8 @@ def reset_progress():
     
     # Réinitialiser seulement le total du jour, pas l'historique complet
     session['current_total'] = 0
-    # ✅ Reset du timer de consommation avec timezone utilisateur
-    session['last_consumption_time'] = get_user_now().isoformat()
+    # ✅ Reset du timer de consommation avec timezone Madagascar
+    session['last_consumption_time'] = get_madagascar_time().isoformat()
     session.modified = True
     flash("Votre consommation du jour a été réinitialisée", "success")
     return redirect(url_for('settings'))

@@ -50,6 +50,16 @@
 
     <main class="container mt-4 flex-grow-1">
         {{ render_messages() }}
+        
+        <!-- ✅ Notification de rappel d'eau -->
+        {% if needs_reminder %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h4 class="alert-heading">💧 Rappel d'hydratation !</h4>
+            <p class="mb-0">Cela fait plus de 2 heures que vous n'avez pas bu d'eau. Pensez à vous hydrater !</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 
@@ -60,6 +70,7 @@
     </footer>
 
     {{ bootstrap.load_js() }}
+    
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
