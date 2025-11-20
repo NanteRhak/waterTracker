@@ -3,4 +3,7 @@
 {% block title %} Tableau de bord {% endblock %}
 {% block content %}
 	{{ render_form(form) }}
+	<div class="progress">
+		<div class="progress-bar" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemax="100" ></div>
+	</div>
 {% endblock %}

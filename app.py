@@ -37,8 +37,11 @@ def convert_to_ml(quantity, unit):
 @app.route('/', methods=['GET','POST'])
 def index():
     init_session()
-
     form = WaterIntake()
+
+    goal = session.get('goal', 2000)
+    current_total = session.get('current_total', 0)
+    percentage = min((current_total/goal) * 100, 100)
     if form.validate_on_submit():
         quantity = float(form.quantity.data)
         unit = form.unit.data
@@ -57,10 +60,12 @@ def index():
         session['history'].append(entry)
         return redirect(url_for('index'))
         session.modified = True
+        percentage = (current_total/goal) * 100
+
         flash(f'{quantity} {unit} ajouté\n Total: {session["current_total"]} mL', 'success')
         return redirect(url_for('index'))
 
-    return render_template('index.html',form=form,quantity=session.get('quantity'), unit=session.get('unit'))
+    return render_template('index.html',form=form,quantity=session.get('quantity'), unit=session.get('unit'), progress=percentage, current_total=current_total, goal=goal)
 
 @app.route('/history')
 def history():
