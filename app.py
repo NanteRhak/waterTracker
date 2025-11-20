@@ -81,8 +81,9 @@ def settings():
 
     if set_goal.validate_on_submit():
         goal = float(set_goal.goal.data)
-        flash(f'Nouvel objectif défini: {goal} mL', 'success')
+        session['goal'] = goal
         session.modified = True
+        flash(f'Nouvel objectif défini: {goal} mL', 'success')
     return render_template('settings.html',set_goal=set_goal,  goal=session.get('goal'))
 
 @app.route('/reset')
