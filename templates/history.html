@@ -3,13 +3,14 @@
 {% block content %}
 	<h1>Historique</h1>
 	{% if history %}
-	<table>
-	<tr>
-		<th>Quantité</th>
-		<th>Unité</th>
-		<th>Date</th>
-		<th>Heure</tr>
-		<th>Total aprèa</th>
+	<div class="table-responsive">
+	<table class="table table-bordered">
+	<tr class="table-info">
+		<th scope="col">Quantité</th>
+		<th scope="col">Unité</th>
+		<th scope="col">Date</th>
+		<th scope="col">Heure</th>
+		<th scope="col">Total après</th>
 	</tr>
 	{% for entry in history %}
 	<tr>
@@ -21,5 +22,6 @@
 	</tr>
 	{% endfor %}
 	</table>
+	</div>
 	{% endif %}
 {% endblock %}
