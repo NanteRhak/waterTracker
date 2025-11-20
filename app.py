@@ -203,7 +203,7 @@ def index():
         session['last_consumption_time'] = madagascar_datetime['iso']
         session.modified = True
         
-        flash(f'{quantity} {unit} ajouté. Total: {session["current_total"]} mL', 'success')
+        flash(f'{quantity} {unit} consomé. Total: {session["current_total"]} mL', 'success')
         return redirect(url_for('index'))
 
     return render_template('index.html', 
