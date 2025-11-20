@@ -34,11 +34,6 @@ def convert_to_ml(quantity, unit):
         return quantity * 250
     return quantity
 
-def get_time():
-    current_time = datetime.now().strftime("%H:%M")
-    current_date = datetime.now().strftime("%d-%m-%Y")
-    return current_date, current_time
-
 @app.route('/', methods=['GET','POST'])
 def index():
     init_session()
@@ -77,13 +72,22 @@ def history():
 @app.route('/settings',methods=['GET','POST'])
 def settings():
     init_session()
-
     set_goal = SetGoal()
+
     if set_goal.validate_on_submit():
         goal = float(set_goal.goal.data)
         flash(f'Nouvel objectif défini: {goal} mL', 'success')
         session.modified = True
     return render_template('settings.html',set_goal=set_goal,  goal=session.get('goal'))
+
+@app.route('/reset')
+def reset_progress():
+    init_session()
+
+    session['current_total'] = 0
+    session.modified = True
+    flash("Votre consomation du jour a été réinitialisé","success")
+    return redirect('settings')
 
 if __name__ == '__main__':
     app.run(debug=True, port=2527)
