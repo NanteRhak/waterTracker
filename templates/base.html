@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> WaterTracker - Suivi de consommation d'eau </title>
+    <title>{% block title %}WaterTracker - Suivi de consommation d'eau{% endblock %}</title>
     
     {{ bootstrap.load_css() }}
     
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <!-- ✅ Ajouter Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -36,7 +38,7 @@
                     <small class="text-white-50">Aujourd'hui:</small>
                     <strong class="text-white">
                         {% if session.get('current_total') %}
-                            {{ session.current_total }} mL
+                            {{ session.current_total }}ml
                         {% else %}
                             0ml
                         {% endif %}
@@ -47,20 +49,17 @@
     </nav>
 
     <main class="container mt-4 flex-grow-1">
-
         {{ render_messages() }}
-
         {% block content %}{% endblock %}
     </main>
 
     <footer class="bg-light mt-auto py-3">
         <div class="container text-center">
-            <span class="text-muted"> - WaterTracker</span>
+            <span class="text-muted">💧 Stay Hydrated - WaterTracker © 2024</span>
         </div>
     </footer>
 
     {{ bootstrap.load_js() }}
-    
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

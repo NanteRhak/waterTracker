@@ -1,25 +1,106 @@
 {% extends "base.html" %}
 {% from "bootstrap5/form.html" import render_form %}
-{% block title %} Tableau de bord {% endblock %}
+{% block title %}Tableau de bord{% endblock %}
 {% block content %}
-	<div class="card">
-		<div class="card-header"><h3>Ajouter</h3></div>
-		<div class="card-body">
-			<p class="card-text">Ajouter votre consomation ici</p>
-	{{ render_form(form) }}
-		</div>
-	</div>
-	<div class="card">
-		<div class="card-header"><h3>Barre de progresaion</h3></div>
-		<div class="card-body">
-			<div class="progress">
-				<div class="progress-bar" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemax="100" ></div>
-			</div>
-		</div>
-		<div class="card-footer">
-			<p class="card-text">Votre progression: {{ progress }}%</p>
-			<p class="xard-text"> Votre objectif: {{ goal/1000 }} L</p>
-			<p class="card-text">Consomé : {{ current_total/1000 }} L</p>
-		</div>
-	</div>
+<div class="row">
+    <!-- Carte Ajouter consommation -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header"><h3>Ajouter</h3></div>
+            <div class="card-body">
+                <p class="card-text">Ajouter votre consommation ici</p>
+                {{ render_form(form) }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte Progression -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header"><h3>Progression du jour</h3></div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 30px;">
+                    <div class="progress-bar 
+                        {% if progress >= 100 %}bg-success
+                        {% elif progress >= 75 %}bg-info
+                        {% elif progress >= 50 %}bg-primary
+                        {% else %}bg-warning{% endif %}" 
+                        role="progressbar" 
+                        style="width: {{ progress }}%" 
+                        aria-valuenow="{{ progress }}" 
+                        aria-valuemax="100">
+                        {{ progress|round(1) }}%
+                    </div>
+                </div>
+                <p class="card-text text-center h5">
+                    {{ current_total }} mL / {{ goal }} mL
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Histogramme Hebdomadaire -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Consommation Hebdomadaire</h3>
+    </div>
+    <div class="card-body">
+        <div style="height: 300px;">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Script pour l'histogramme -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    
+    const weeklyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ weekly_data.labels | tojson }},
+            datasets: [{
+                label: 'Consommation (mL)',
+                data: {{ weekly_data.data | tojson }},
+                backgroundColor: {{ weekly_data.colors | tojson }},
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Millilitres (mL)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Jours de la semaine'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Consommation: ${context.parsed.y} mL`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

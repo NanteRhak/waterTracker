@@ -3,7 +3,7 @@ from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SelectField, SubmitField
 from wtforms.validators import DataRequired, NumberRange
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
@@ -46,6 +46,46 @@ def convert_to_ml(quantity, unit):
         return quantity * 250
     return quantity
 
+def get_weekly_consumption():
+    """Calcule la consommation pour les 7 derniers jours (lundi à dimanche)"""
+    weekly_data = {
+        'labels': [],  # Jours de la semaine
+        'data': [],    # Consommation en mL
+        'colors': []   # Couleurs pour le graphique
+    }
+    
+    # Obtenir le lundi de cette semaine
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())  # Lundi
+    
+    # Générer les 7 jours de la semaine (lundi à dimanche)
+    for i in range(7):
+        current_day = start_of_week + timedelta(days=i)
+        day_label = current_day.strftime("%a")  # Nom court du jour
+        date_str = current_day.strftime("%Y-%m-%d")
+        
+        # Calculer la consommation pour ce jour
+        daily_total = 0
+        for entry in session.get('history', []):
+            # Convertir la date stockée en format comparable
+            try:
+                entry_date = datetime.strptime(entry['date'], "%d-%m-%Y").date()
+                if entry_date == current_day:
+                    daily_total += entry['quantity_ml']
+            except ValueError:
+                # Gérer le format de date différent
+                continue
+        
+        weekly_data['labels'].append(day_label)
+        weekly_data['data'].append(daily_total)
+        
+        # Définir la couleur (verte si objectif atteint, bleue sinon)
+        goal = session.get('goal', 2000)
+        color = 'rgba(75, 192, 75, 0.7)' if daily_total >= goal else 'rgba(54, 162, 235, 0.7)'
+        weekly_data['colors'].append(color)
+    
+    return weekly_data
+
 @app.route('/', methods=['GET','POST'])
 def index():
     init_session()
@@ -55,6 +95,9 @@ def index():
     goal = session.get('goal', 2000)
     current_total = session.get('current_total', 0)
     percentage = min((current_total / goal) * 100, 100) if goal > 0 else 0
+    
+    # ✅ Obtenir les données hebdomadaires pour l'histogramme
+    weekly_data = get_weekly_consumption()
     
     if form.validate_on_submit():
         quantity = float(form.quantity.data)
@@ -77,7 +120,12 @@ def index():
         flash(f'{quantity} {unit} ajouté. Total: {session["current_total"]} mL', 'success')
         return redirect(url_for('index'))
 
-    return render_template('index.html', form=form, progress=percentage, current_total=current_total, goal=goal)
+    return render_template('index.html', 
+                         form=form, 
+                         progress=percentage, 
+                         current_total=current_total, 
+                         goal=goal,
+                         weekly_data=weekly_data)  # ✅ Passer les données hebdomadaires
 
 @app.route('/history')
 def history():
