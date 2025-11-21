@@ -104,7 +104,7 @@
         }
         
         // Vérifier si une notification navigateur est nécessaire
-        {% if needs_reminder and Notification.permission === "granted" %}
+        {% if needs_reminder and Notification.permission == "granted" %}
         new Notification("💧 WaterTracker - Rappel", {
             body: "Cela fait plus de 2 heures que vous n'avez pas bu d'eau. Pensez à vous hydrater ! 💦",
             icon: "{{ url_for('static', filename='images/favicon.ico') }}",
