@@ -6,10 +6,14 @@ from wtforms.validators import DataRequired, NumberRange
 from datetime import datetime, date, timedelta, timezone
 import pytz
 import math
+import os
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
 app.config['BOOTSTRAP_SERVE_LOCAL'] = True
+os.environ['TZ'] = 'Indian/Antananarivo'
+time.tzset()
 bootstrap = Bootstrap5(app)
 
 class WaterIntake(FlaskForm):
@@ -42,7 +46,7 @@ def get_user_timezone():
             pass
     
     # Fallback final: timezone du serveur
-    return pytz.timezone('Europe/Paris')  # Ajustez selon votre localisation
+    return pytz.timezone('Indian/Antananarivo')  # Ajustez selon votre localisation
 
 def get_user_now():
     """Retourne la date/heure actuelle dans le timezone de l'utilisateur"""
@@ -95,7 +99,7 @@ def check_daily_reset():
         print(f"✅ Total quotidien réinitialisé pour le {user_today} (timezone utilisateur)")
 
 def convert_to_ml(quantity, unit):
-    if unit == 'verre':
+    if unit == 'verre (250 mL)':
         return quantity * 250
     return quantity
 
