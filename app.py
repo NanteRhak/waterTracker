@@ -14,7 +14,7 @@ bootstrap = Bootstrap5(app)
 
 class WaterIntake(FlaskForm):
     quantity = DecimalField('Quantité', validators=[DataRequired(), NumberRange(min=0.1)])
-    unit = SelectField('Type', choices=[('mL','mL'),('verre','verre')])
+    unit = SelectField('Type', choices=[('mL','mL'),('verre (250 mL)','verre (250 mL)')])
     submit = SubmitField('Ajouter')
 
 class SetGoal(FlaskForm):
